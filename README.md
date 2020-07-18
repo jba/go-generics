@@ -1,2 +1,3 @@
 # go-generics
-experiments in using Go generics
+
+Experiments in using the new Go generics implementation.
