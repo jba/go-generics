@@ -1,0 +1,165 @@
+// Package list implements an unrolled doubly-linked list.
+package list
+
+type Element[type T] struct {
+	n *node[T]
+	i int
+}
+
+func (e Element[T]) Zero() bool {
+	return e.n == nil && e.i == 0
+}
+
+// Any modification to the list invalidates Value.
+func (e Element[T]) Value() T {
+	return e.n.vals[e.i]
+}
+
+func (e Element[T]) Next() Element[T] {
+	i := e.i + 1
+	if i < e.n.len {
+		return Element[T]{e.n, i}
+	}
+	return Element[T]{e.n.next, 0}
+}
+
+func (e *Element[T]) Prev() Element[T] {
+	i := e.i - 1
+	if i >= 0 {
+		return Element[T]{e.n, i}
+	}
+	return Element[T]{e.n.prev, 0}
+}
+
+const nodeSize = 4
+
+type node[type T] struct {
+	vals       [nodeSize]T
+	len        int
+	next, prev *node[T]
+}
+
+type List[type T] struct {
+	front, back *node[T]
+	len         int
+}
+
+func (l *List[T]) Front() Element[T] {
+	return Element[T]{l.front, 0}
+}
+
+func (l *List[T]) Back() Element[T] {
+	if l.len == 0 {
+		return Element[T]{}
+	}
+	return Element[T]{l.back, l.back.len}
+}
+
+func (l *List[T]) Len() int {
+	return l.len
+}
+
+func (l *List[T]) InsertAfter(v T, e Element[T]) Element[T] {
+	// assert e.i < e.n.len
+	return l.insertAt(v, e.n, e.i+1)
+}
+
+func (l *List[T]) InsertBefore(v T, e Element[T]) Element[T] {
+	return l.insertAt(v, e.n, e.i)
+}
+
+// 	// Split full node.
+// 	const halflen = len(n.vals) / 2
+// 	n2 := l.addNodeAfter(n)
+// 	copy(n2.vals[:], n.vals[halflen:])
+// 	n2.len = halflen
+// 	n.len = halflen
+// 	if i > halflen {
+// 		n = n2
+// 		i -= halflen
+// 	}
+// }
+
+func (l *List[T]) insertAt(v T, n *node[T], i int) Element[T] {
+	l.len++
+	if n.len == nodeSize {
+		// Full node.
+		if n.next == nil || n.next.len == nodeSize {
+			// Next node is full or non-existent; start a new one.
+			n2 := l.addNodeAfter(n)
+			n2.len = 1
+			if i == n.len {
+				n2.vals[0] = v
+				return Element[T]{n2, 0}
+			}
+			n.len--
+			n2.vals[0] = n.vals[n.len]
+		} else {
+			// Move last element to next node.
+			n.len--
+			n.next.insertNonFull(n.vals[n.len], 0)
+		}
+	}
+	n.insertNonFull(v, i)
+	return Element[T]{n, i}
+}
+
+func (n *node[T]) insertNonFull(v T, i int) {
+	// assert n.len < nodeSize
+	copy(n.vals[i+1:], n.vals[i:n.len])
+	n.vals[i] = v
+	n.len++
+}
+
+func (l *List[T]) PushFront(v T) Element[T] {
+	if l.front == nil {
+		l.init()
+	}
+	return l.insertAt(v, l.front, 0)
+}
+
+func (l *List[T]) PushBack(v T) Element[T] {
+	if l.back == nil {
+		l.init()
+	}
+	return l.insertAt(v, l.back, l.back.len)
+}
+
+func (l *List[T]) init() {
+	n := &node[T]{}
+	l.front = n
+	l.back = n
+}
+
+func (l *List[T]) addNodeAfter(n *node[T]) *node[T] {
+	n2 := &node[T]{next: n.next, prev: n}
+	n.next = n2
+	if n2.next == nil {
+		l.back = n2
+	} else {
+		n2.next.prev = n2
+	}
+	return n2
+}
+
+func (l *List[T]) Remove(e Element[T]) {
+	if e.n.len == 1 {
+		l.unsplice(e.n)
+	} else {
+		copy(e.n.vals[e.i:], e.n.vals[e.i+1:])
+		e.n.len--
+	}
+}
+
+func (l *List[T]) unsplice(n *node[T]) {
+	if n.next == nil {
+		l.back = n.prev
+	} else {
+		n.next.prev = n.prev
+	}
+	if n.prev == nil {
+		l.front = n.next
+	} else {
+		n.prev.next = n.next
+	}
+}

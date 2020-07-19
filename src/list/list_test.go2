@@ -1,0 +1,99 @@
+package list
+
+import (
+	"testing"
+	"bytes"
+	"io"
+	"fmt"
+	"reflect"
+)
+
+func str(l *List[int]) string {
+	var buf bytes.Buffer
+	io.WriteString(&buf, "[")
+	first := true
+	for n := l.front; n != nil; n = n.next {
+		for i := 0; i < n.len; i++ {
+			if !first {
+				io.WriteString(&buf, ", ")
+			}
+			first =false
+			fmt.Fprintf(&buf, "%d", n.vals[i])
+		}
+	}
+	io.WriteString(&buf, "]")
+	return buf.String()
+}
+
+func structure(l *List[int]) string {
+	var buf bytes.Buffer
+	for n := l.front; n != nil; n = n.next {
+		for i := 0; i < n.len; i++ {
+			fmt.Fprintf(&buf, "%d ", n.vals[i])
+		}
+		if n.next != nil {
+			io.WriteString(&buf, "| ")
+		}
+	}
+	buf.Truncate(buf.Len()-1)
+	return buf.String()
+}
+
+
+func TestBasics(t *testing.T) {
+	l := &List[int]{}
+	l.PushBack(1)
+	l.PushBack(2)
+	e3 := l.PushBack(3)
+	l.PushBack(4)
+	fmt.Println(structure(l))
+	e := l.PushBack(5)
+	fmt.Println(structure(l))
+	l.InsertBefore(-5, e)
+	l.InsertBefore(-3, e3)
+	l.InsertBefore(99, e3)
+	l.PushFront(0)
+	check(t, l, "0 1 2 99 | -3 | 3 4 -5 5")
+	want := []int{0, 1, 2, 99, -3, 3, 4, -5, 5}
+	var got []int
+	for e := l.Front(); !e.Zero(); e =e.Next() {
+		got = append(got, e.Value())
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+}
+
+func slice[type T](l *List[T]) []T {
+	var els []T
+	for n := l.front; n != nil ; n = n.next {
+		els = append(els, n.vals[:n.len]...)
+	}
+	return els
+}
+
+func check(t *testing.T, l *List[int], want string) {
+	t.Helper()
+	got := structure(l)
+	if got != want {
+		t.Fatalf("got %s, want %s", got, want)
+	}
+}
+
+func TestRemove(t *testing.T) {
+	l := &List[int]{}
+	var els []Element[int]
+	for i := 0; i < 10; i++ {
+		els =  append(els, l.PushBack(i))
+	}
+	check(t, l, "0 1 2 3 | 4 5 6 7 | 8 9")
+	l.Remove(els[2])
+	check(t, l, "0 1 3 | 4 5 6 7 | 8 9")
+	l.Remove(l.Front())
+	check(t, l, "1 3 | 4 5 6 7 | 8 9")
+	l.Remove(l.Back())
+	check(t, l, "1 3 | 4 5 6 7 | 8")
+	l.Remove(l.Back())
+	check(t, l, "1 3 | 4 5 6 7")
+}
