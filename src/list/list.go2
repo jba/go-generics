@@ -68,44 +68,56 @@ func (l *List[T]) InsertBefore(v T, e Element[T]) Element[T] {
 	return l.insertAt(v, e.n, e.i)
 }
 
-// 	// Split full node.
-// 	const halflen = len(n.vals) / 2
-// 	n2 := l.addNodeAfter(n)
-// 	copy(n2.vals[:], n.vals[halflen:])
-// 	n2.len = halflen
-// 	n.len = halflen
-// 	if i > halflen {
-// 		n = n2
-// 		i -= halflen
-// 	}
-// }
-
 func (l *List[T]) insertAt(v T, n *node[T], i int) Element[T] {
 	l.len++
 	if n.len == nodeSize {
-		// Full node.
-		if n.next == nil || n.next.len == nodeSize {
-			// Next node is full or non-existent; start a new one.
+		// This node is full. Add the element to the next node if there's room.
+		// Otherwise, split this node into two.
+		if n.next == nil {
+			l.addNodeAfter(n)
+		}
+		assert(n.next != nil)
+		if n.next.len == nodeSize {
+			// Split this node.
+			const halfSize = nodeSize / 2
 			n2 := l.addNodeAfter(n)
-			n2.len = 1
-			if i == n.len {
-				n2.vals[0] = v
-				return Element[T]{n2, 0}
+			copy(n2.vals[:], n.vals[halfSize:])
+			n2.len = halfSize
+			n.len = halfSize
+			if i > halfSize {
+				n = n2
+				i -= halfSize
 			}
-			n.len--
-			n2.vals[0] = n.vals[n.len]
+		} else if i == n.len {
+			n = n.next
+			i = 0
 		} else {
-			// Move last element to next node.
-			n.len--
-			n.next.insertNonFull(n.vals[n.len], 0)
+			// Try to move i and above; move less there's not enough room.
+			m := n.len - i
+			if nodeSize-n.next.len < m {
+				m = nodeSize - n.next.len
+			}
+			copy(n.next.vals[m:], n.next.vals[:n.next.len])
+			copy(n.next.vals[:m], n.vals[n.len-m:n.len])
+			n.len -= m
+			n.next.len += m
+			// We still want to insert at position i in n.
 		}
 	}
+	assert(n.len < nodeSize)
+	assert(i <= n.len)
 	n.insertNonFull(v, i)
 	return Element[T]{n, i}
 }
 
+func assert(b bool) {
+	if !b {
+		panic("assertion failed")
+	}
+}
+
 func (n *node[T]) insertNonFull(v T, i int) {
-	// assert n.len < nodeSize
+	assert(n.len < nodeSize)
 	copy(n.vals[i+1:], n.vals[i:n.len])
 	n.vals[i] = v
 	n.len++
@@ -143,6 +155,7 @@ func (l *List[T]) addNodeAfter(n *node[T]) *node[T] {
 }
 
 func (l *List[T]) Remove(e Element[T]) {
+	//  TODO: merge half-full nodes
 	if e.n.len == 1 {
 		l.unsplice(e.n)
 	} else {

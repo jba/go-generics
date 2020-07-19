@@ -1,6 +1,9 @@
 package list
 
-import clist "container/list"
+import (
+	clist "container/list"
+	"testing"
+)
 
 const N = 100_000
 
