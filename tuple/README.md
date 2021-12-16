@@ -36,7 +36,7 @@ struct equality, is itself comparable.
 
 The metrics package is practically a best case for tuples. In other cases,
 tuples can't eliminate arity copying, but they can mitigate it. The file
-examples_test.go2 contains the outline of a property-testing framework, greatly
+examples_test.go contains the outline of a property-testing framework, greatly
 simplified from github.com/leanovate/gopter. The basic idea is to generate a lot
 of random arguments for a boolean function (the predicate) and see if it ever
 returns false on them. The gopter package handles functions of any arity via
@@ -45,7 +45,7 @@ somewhere, but we can at least define a single Check function that takes a
 one-argument predicate and a single generator of random values:
 
 ```
-func Check[type T](max int, pred func(T) bool, gen Gen[T])
+func Check[T any](max int, pred func(T) bool, gen Gen[T])
 ```
 
 The file presents two designs that start from there, both built on the
