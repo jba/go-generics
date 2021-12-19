@@ -24,21 +24,19 @@ type Gen[T any] func() T
 
 // CombineGens2 converts two generators into a single generator that returns a tuple.
 func CombineGens2[A, B any](ga Gen[A], gb Gen[B]) Gen[tuple.T2[A, B]] {
-	return func() tuple.T2[A, B] {
-		return tuple.New2(ga(), gb())
-	}
+	return joinGen(ga, gb, tuple.Join2[A, B])
 }
 
 func CombineGens3[A, B, C any](ga Gen[A], gb Gen[B], gc Gen[C]) Gen[tuple.T3[A, B, C]] {
-	return func() tuple.T3[A, B, C] {
-		return tuple.New3(ga(), gb(), gc())
-	}
+	return joinGen(CombineGens2(ga, gb), gc, tuple.Join3[A, B, C])
 }
 
 func CombineGens4[A, B, C, D any](ga Gen[A], gb Gen[B], gc Gen[C], gd Gen[D]) Gen[tuple.T4[A, B, C, D]] {
-	return func() tuple.T4[A, B, C, D] {
-		return tuple.New4(ga(), gb(), gc(), gd())
-	}
+	return joinGen(CombineGens3(ga, gb, gc), gd, tuple.Join4[A, B, C, D])
+}
+
+func joinGen[T, V, R any](gt Gen[T], gv Gen[V], join func(T, V) R) Gen[R] {
+	return func() R { return join(gt(), gv()) }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -48,5 +46,5 @@ func Check2[A, B any](max int, pred func(A, B) bool, genA Gen[A], genB Gen[B]) (
 	p := func(t tuple.T2[A, B]) bool { return pred(t.Spread()) }
 	g := func() tuple.T2[A, B] { return tuple.New2(genA(), genB()) }
 	r, ok := Check(max, p, g)
-	return r.V0, r.V1, ok
+	return r.V0(), r.V1(), ok
 }

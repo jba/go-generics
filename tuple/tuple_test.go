@@ -6,26 +6,13 @@ import (
 
 func TestVs(t *testing.T) {
 	t3 := New3("x", 8, true)
-	if got, want := t3.V0(), "x"; got != want {
+	if got, want := t3.V0, "x"; got != want {
 		t.Errorf("got %v, want %v", got, want)
 	}
-	if got, want := t3.V1(), 8; got != want {
+	if got, want := t3.V1, 8; got != want {
 		t.Errorf("got %v, want %v", got, want)
 	}
-	if got, want := t3.V2(), true; got != want {
-		t.Errorf("got %v, want %v", got, want)
-	}
-}
-
-func TestNth(t *testing.T) {
-	t3 := New3("x", 8, true)
-	if got, want := t3.Nth(0), "x"; got != want {
-		t.Errorf("got %v, want %v", got, want)
-	}
-	if got, want := t3.Nth(1), 8; got != want {
-		t.Errorf("got %v, want %v", got, want)
-	}
-	if got, want := t3.Nth(2), true; got != want {
+	if got, want := t3.V2, true; got != want {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
