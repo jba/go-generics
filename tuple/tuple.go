@@ -34,6 +34,16 @@ type T5[A, B, C, D, E any] struct {
 	V4 E
 }
 
+// T6 is a tuple of five elements.
+type T6[A, B, C, D, E, F any] struct {
+	V0 A
+	V1 B
+	V2 C
+	V3 D
+	V4 E
+	V5 F
+}
+
 // New2 returns a new T2.
 func New2[A, B any](a A, b B) T2[A, B] {
 	return T2[A, B]{a, b}
@@ -54,6 +64,11 @@ func New5[A, B, C, D, E any](a A, b B, c C, d D, e E) T5[A, B, C, D, E] {
 	return T5[A, B, C, D, E]{a, b, c, d, e}
 }
 
+// New6 returns a new T6.
+func New6[A, B, C, D, E, F any](a A, b B, c C, d D, e E, f F) T6[A, B, C, D, E, F] {
+	return T6[A, B, C, D, E, F]{a, b, c, d, e, f}
+}
+
 // Spread returns the elements of its receiver as separate return values.
 func (t T2[A, B]) Spread() (A, B) { return t.V0, t.V1 }
 
@@ -66,6 +81,9 @@ func (t T4[A, B, C, D]) Spread() (A, B, C, D) { return t.V0, t.V1, t.V2, t.V3 }
 // Spread returns the elements of its receiver as separate return values.
 func (t T5[A, B, C, D, E]) Spread() (A, B, C, D, E) { return t.V0, t.V1, t.V2, t.V3, t.V4 }
 
+// Spread returns the elements of its receiver as separate return values.
+func (t T6[A, B, C, D, E, F]) Spread() (A, B, C, D, E, F) { return t.V0, t.V1, t.V2, t.V3, t.V4, t.V5 }
+
 func (t T2[A, B]) String() string    { return fmt.Sprintf("<%v, %v>", t.V0, t.V1) }
 func (t T3[A, B, C]) String() string { return fmt.Sprintf("<%v, %v, %v>", t.V0, t.V1, t.V2) }
 
@@ -77,4 +95,9 @@ func (t T4[A, B, C, D]) String() string {
 func (t T5[A, B, C, D, E]) String() string {
 	return fmt.Sprintf("<%v, %v, %v, %v, %v>",
 		t.V0, t.V1, t.V2, t.V3, t.V4)
+}
+
+func (t T6[A, B, C, D, E, F]) String() string {
+	return fmt.Sprintf("<%v, %v, %v, %v, %v, %v>",
+		t.V0, t.V1, t.V2, t.V3, t.V4, t.V5)
 }
